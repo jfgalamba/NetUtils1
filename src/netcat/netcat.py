@@ -52,7 +52,7 @@ def main():
         netcat listen -a 0.0.0.0
 
         # Listen on localhost, port 8080, with auto-replies
-        netcat -p 8080 listen -a 127.0.0.1
+        netcat -p 8080 listen -a 127.0.0.1 -A
     """)
     parser = argparse.ArgumentParser(
         formatter_class = argparse.RawDescriptionHelpFormatter,
