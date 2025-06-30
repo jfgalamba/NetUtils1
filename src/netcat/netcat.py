@@ -14,6 +14,7 @@ acesso remoto à shell do sistema. Implementar um clone do netcat é
 também um excelente exercício de programação em Python com sockets.
 """
 
+import re
 import sys
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import argparse
@@ -70,7 +71,7 @@ def main():
     connect_parser = commands.add_parser('connect')
     connect_parser.add_argument(
         '-a', '--address',
-        type = ipaddress.ip_address,
+        type = ensure_valid_host_or_ip,
         default = '127.0.0.1',
         help = 'server/listener host IP',
     )
@@ -92,7 +93,7 @@ def main():
     listen_parser = commands.add_parser('listen')
     listen_parser.add_argument(
         '-a', '--address',
-        type = ipaddress.ip_address,
+        type = ensure_valid_host_or_ip,
         default = '0.0.0.0',
         help = 'local IP address to listen on',
     )
@@ -171,7 +172,7 @@ class Netcat:
             cmd_line = client_socket.recv(self.CMD_LINE_BUFFER_DIM)
             cmd = cmd_line.decode().strip()
 
-            if cmd == 'exit':
+            if cmd.lower() in ('exit', 'quit'):
                 return
 
             if len(cmd) > 0:
@@ -246,6 +247,34 @@ def exec_cmd(cmd: str) -> str:
     output = subprocess.check_output(shlex.split(cmd), stderr=subprocess.STDOUT)
     return output.decode()
 #:
+
+def ensure_valid_host_or_ip(host_or_ip: str) -> str:
+    try: 
+        ipaddress.ip_address(host_or_ip)
+    except ValueError:
+        if not is_valid_hostname(host_or_ip):
+            raise ValueError(f'Not a valid hostname nor IPv4 address "{host_or_ip}"')
+    return host_or_ip
+#:
+
+def _make_is_valid_hostname():
+    allowed = re.compile(r"(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    def _is_valid_hostname(hostname):
+        """
+        From: http://stackoverflow.com/questions/2532053/validate-a-hostname-string
+        See also: https://en.wikipedia.org/wiki/Hostname (and the RFC 
+        referenced there)
+        """
+        if not 0 < len(hostname) <= 255:
+            return False
+        if hostname[-1] == ".":
+            # strip exactly one dot from the right, if present
+            hostname = hostname[:-1]
+        return all(allowed.match(x) for x in hostname.split("."))
+    return _is_valid_hostname
+#:
+is_valid_hostname = _make_is_valid_hostname()
+
 
 def print_status(*args, **kargs):
     print(*args, **kargs, file=sys.stderr)
