@@ -62,7 +62,7 @@ def main():
     )
     parser.add_argument(
         '-p', '--port',
-        type = int,
+        type = positive_int,
         default = 5555,
         help = 'network port to use'
     )
@@ -275,6 +275,13 @@ def _make_is_valid_hostname():
 #:
 is_valid_hostname = _make_is_valid_hostname()
 
+
+def positive_int(val) -> int:
+    val = int(val)
+    if val < 0:
+        raise argparse.ArgumentTypeError('Not a positive int')
+    return val
+#:
 
 def print_status(*args, **kargs):
     print(*args, **kargs, file=sys.stderr)
