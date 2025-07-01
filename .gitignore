@@ -152,3 +152,6 @@ dmypy.json
 .pyre/
 
 .DS_Store
+
+/src/proxy/*.bin
+/src/proxy/*.pdf
